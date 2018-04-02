@@ -1,0 +1,44 @@
+= doctype html
+html
+  head
+    script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+    link rel="stylesheet" type="text/css" href="/public/styles.css"
+    = css
+      #login-form div{
+        text-align: center;
+      }
+      #login-form input {
+        margin: .5em 1em;
+      }
+      #error {
+        text-align: center;
+        color: red;
+        margin-top: 1em;
+      }
+  body
+    h1 style="text-align: center;" BigDisk Admin Login Page
+    form#login-form action="/login"
+      div
+        label Username
+        input#email type="text" name="username" required=
+      div
+        label Password
+        input type="password" name="password"
+      div
+        input type="submit" value="Log In" name="login"
+        button#resetpassword name="resetpassword" Reset Password
+
+  = javascript
+    $('#resetpassword').click(function(event) {
+      event.preventDefault();
+      email = $('#email').val()
+      username = email.match(/^([^@]*)@/)[1];
+      $.post('/resetlogin/' + username, null)
+      .done(function() {
+        alert('BigDisk sent you an email at ' + email + '. Please follow the instructions in that email')
+      })
+      .fail(function() {
+        alert('BigDisk could not send you an email')
+      })
+    })
+    

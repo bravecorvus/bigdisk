@@ -1,0 +1,738 @@
+= doctype html
+html lang=en
+  head
+    title BigDisk SuperAdmin Home
+    script src="https://unpkg.com/vue@2.1.10/dist/vue.js"
+    script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"
+    script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+    link rel="stylesheet" type="text/css" href="/public/styles.css"
+
+  body
+    h1 style="text-align: center;" BigDisk SuperAdmin Home Page
+
+    script#unbanips-template type="text/x-template"
+      transition name="unbanips"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 50%; height: 50%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+                h1 Un-ban IP's
+              .modal-body style="float: left; text-align: center;"
+                tr
+                  th IP Address
+                  th Un-ban
+                tr v-for="(ip, index) in this.$parent.ips"
+                  td ${ip.address}
+                  td 
+                    button style="background-color: #4CAF50; color: white;" @click="unbanip(index)" Un-ban
+              .modal-footer
+
+
+    script#manageadmins-template type="text/x-template"
+      transition name="manageadmins"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 50%; height: 50%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+              .modal-body style="float: left; text-align: center;"
+                tr
+                  th Email Address
+                  th Account Creation Date
+                  th Last Login
+                  th Delete Account
+                tr v-for="(email, index) in this.$parent.admins"
+                  td ${email.username}
+                  td ${email.accountcreatedstring}
+                  td ${email.lastloginstring}
+                  td 
+                    button style="background-color: red; color: white;" @click="deleteadmin(index)" Delete
+              .modal-footer
+
+    script#systemstorage-template type="text/x-template"
+      transition name="modifysystemstorage"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 50%; height: 50%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+              .modal-body style="float: left; text-align: center;"
+                #systemstoragecanvasparent style="width: 90%;"
+                  canvas#systemchart width="400" height="400"
+                br
+                br
+                label style="text-align: left; float: left;" Modify BigDisk Capacity
+                  input style="text-align: left; left: 30%;" type="text" v-model="totalcapacity" GB
+                br
+                button style="background-color: #4CAF50; color: white;" @click="submitsystemstorage" Submit
+              .modal-footer
+
+    script#changepassword-template type="text/x-template"
+      transition name="changepassword"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 50%; height: 50%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+              .modal-body style="float: left; text-align: center;"
+                label style="text-align: left; float: left;" Old Password
+                  input style="text-align: left; left: 30%;" type="password" name="oldpassword" v-model="oldpassword"
+                br
+                br
+                br
+                label style="text-align: left; float: left;" New Password
+                  input.pass style="text-align: left; left: 30%;" type="password" name="newpassword" v-model="newpassword1"
+                br
+                br
+                label style="text-align: left; float: left;" Repeat New Password
+                  input.pass style="text-align: left; left: 30%;" type="password" name="newpassword" v-model="newpassword2"
+                br
+                br
+                button style="background-color: #4CAF50; color: white;" @click="submitpasswordchange" Submit
+              .modal-footer
+
+    script#newadmin-template type="text/x-template"
+      transition name="newadmin"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 50%; height: 50%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+                br
+                br
+              .modal-body style="float: left; text-align: center;"
+                label Enter a valid St. Olaf username to add as a new administrator for BigDisk Admin
+                  input type="text" name="username" v-model="username"
+                  button style="background-color: #4CAF50; color: white;" @click="addnewadministrator" Submit
+              .modal-footer
+
+    script#modal-template type="text/x-template"
+      transition name="modal"
+        .modal-mask
+          .modal-wrapper
+            .modal-container style="width: 90%; height: 90%"
+              .modal-header
+                button.modal-default-button @click="$emit('close')" style="float: right; background-color: red; color: white; width: 5em; height: 5em;" Close Window
+                h1 style="text-align: center; text-decoration: underline;" ${this.$parent.clients[this.$parent.editingindex].publiclink}
+                br
+              .modal-body
+                #secretlink style="border: 3px solid black; width: 49%; float: left; text-align: center;"
+                  h3 Secret Link
+                  p Secret Link is: ${this.$parent.clients[this.$parent.editingindex].secretlink}
+                  button style="background-color: #4CAF50; color: white;" @click="generateNewSecretLink" Generate New Secret Link
+                  br
+                  br
+                #changecapacity style="border: 3px solid black; width: 49%; float: right; text-align: center;"
+                  h3 Storage Capacity
+                  #appusagechartparent style="width: 48%; float: left;"
+                    canvas#appusagechart width="400" height="400"
+                  #systemusagechartparent style="width: 48%; float: right;"
+                    canvas#systemusagechart width="400" height="400"
+                  div class="slidecontainer" style="text-align: center;"
+                    input#modifytotalcapacity type="range" min="1" :max="this.$parent.systemcapacity" v-model="newcapacity" class="slider" @mouseup="reflectchanges" @keyup="reflectchanges"
+                    p#totalcapacity
+                    button style="background-color: #4CAF50; color: white;" @click="submitstoragechange" Submit Changes
+                    br
+                    br
+                #emails style="border: 3px solid black; width: 49%;; float: left; text-align: center;"
+                  h3 Admin Emails
+                  div
+                    table
+                      tr
+                        th Email Address
+                        th Add/Delete Entries
+                      tr v-for="(email, index) in this.$parent.emails"
+                        td ${email}@stolaf.edu
+                        td
+                          button style="background-color: red; color: white" @click="removeEmail(email, index)" Remove Admin
+                      tr
+                        td
+                          input type="text" v-model="newemail" @stolaf.edu
+                        td
+                          button style="background-color: #4CAF50; color: white;" @click="submitNewEmail" Add Admin
+                      br
+              .modal-footer
+                br
+                br
+                div style="float: right; margin-top: 3em; margin-right: 3em;"
+                  label style="float: right;"
+                    em Danger Zone: Pushing this button will delete not only the app's entries, but also all associated files with it
+                  br
+                  button @click="deleteapp" style="float: right; background-color: red; color: white; width: 20em; height: 5em;" Delete App
+
+    form style="float: left;" action="/logout"
+      input type="submit" value="Log Out" name="Log Out"
+    #app
+
+
+      button @click="changepasswordwindow" Change Password
+      button @click="addnewadminwindow" Add New Admin
+      button @click="systemcapacitywindow" Change System Capacity
+      button @click="manageadminswindow" Manage Admins
+      button @click="unbanipswindow" Un-ban IP's
+
+      modal v-if="showmodal" @close="showmodal = false"
+      modifysystemstorage v-if="showsystemcapacity" @close="showsystemcapacity = false"
+      changepassword v-if="showchangepassword" @close="showchangepassword = false"
+      newadmin v-if="shownewadmin" @close="shownewadmin = false"
+      manageadmins v-if="showmanageadmins" @close="showmanageadmins = false"
+      unbanips v-if="showunbanips" @close="showunbanips = false"
+
+
+
+      #clients-table
+        table
+          tr
+            th App Name
+            th Private Link
+            th Using
+            th Total Capacity
+            th Edit Details
+          tr v-for="(client, index) in clients"
+            td ${client.publiclink}
+            td ${obscureLink(client.secretlink)}
+            td ${client.using}GB
+            td ${client.totalcapacity}GB
+            td
+              button#editEntry @click="editEntry(index)" Details
+          tr
+            td
+              input type="text" v-model="newapppubliclink"
+            td ${newappsecretlink}
+            td 0GB
+            td
+              input type="text" v-model="newapptotalcapacity"
+            td
+              button style="background-color: #4CAF50; color: white;" @click="addnewapp" Add New Application
+                
+
+  = javascript
+
+
+
+      Vue.component('unbanips', {
+        template: '#unbanips-template',
+        delimiters: ['${', '}'],
+        methods: {
+          unbanip(index) {
+            ip = this.$parent.ips[index].address
+            confirmdelete = confirm('Confirm: un-ban IP address: ' + ip)
+            that = this
+            if (confirmdelete) {
+              $.post('/unbanip/' + ip)
+                .done(function() {
+                  alert('Successfully un-banned IP: ' + ip)
+                  that.$parent.ips.splice(index, 1)
+                })
+                .fail(function() {
+                  alert('Failed to un-ban IP: ' + ip)
+                })
+            }
+          },
+        },
+      })
+
+      Vue.component('manageadmins', {
+        template: '#manageadmins-template',
+        delimiters: ['${', '}'],
+        methods: {
+          deleteadmin(index) {
+            admins = this.$parent.admins
+            email = admins[index].username
+            confirmdelete = confirm('Confirm: delete BigDisk admin ' + email)
+            if (confirmdelete) {
+              username = email.match(/^([^@]*)@/)[1]
+              that = this
+              $.post('/deleteadmin/' + username)
+                .done(function() {
+                  alert('Successfully deleted admin ' + email)
+                })
+                .fail(function() {
+                  alert('Failed to delete admin ' + email)
+                })
+            }
+          },
+
+        },
+      })
+
+      Vue.component('modifysystemstorage', {
+        template: '#systemstorage-template',
+        delimiters: ['${', '}'],
+        data: {
+          using: '',
+          totalcapacity: '',
+        },
+
+        methods: {
+          submitsystemstorage() {
+            if (this.totalcapacity < this.using) {
+              alert('Cannot modify the system capacity to go below the app usage.')
+            } else if (isNaN(this.totalcapacity)) {
+              alert('Please input a numerical value.')
+            } else {
+              this.$parent.systemcapacity = this.totalcapacity
+              unused = this.totalcapacity - this.using;
+
+              $.post('/modifysystemcapacity/' + this.totalcapacity, null)
+                .done(function() {
+                  alert('Successfully submitted BigDisk new system capacity.')
+                })
+                .fail(function() {
+                  alert('Failed to update the BigDisk system capacity')
+                })
+
+              $('#systemchart').remove();
+              $('#systemstoragecanvasparent').append('<canvas id="systemchart" width="400" height="400"><canvas>');
+              systemstoragectx = document.getElementById('systemchart');
+              systemusagechart = new Chart(systemstoragectx, {
+                type: 'doughnut',
+                data: {
+                  datasets: [{
+                    data: [this.using, unused],
+                    backgroundColor: [
+                      '#ff5879',
+                      '#2f98e8',
+                    ]
+                  }],
+                  labels: [
+                    'Actively Using',
+                    'Unused',
+                  ],
+                },
+                options: {
+                  title: {
+                    display: true,
+                    text: 'Total BigDisk Resource Usage',
+                  }
+                }
+              })
+            }
+          }
+        },
+
+        mounted() {
+          this.using = this.$parent.systemusage;
+          this.totalcapacity = this.$parent.systemcapacity;
+          unused = this.totalcapacity - this.using;
+          systemstoragectx = document.getElementById('systemchart');
+          systemusagechart = new Chart(systemstoragectx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [this.using, unused],
+                backgroundColor: [
+                  '#ff5879',
+                  '#2f98e8',
+                ]
+              }],
+              labels: [
+                'Actively Using',
+                'Unused',
+              ],
+            },
+            options: {
+              title: {
+                display: true,
+                text: 'Total BigDisk Resource Usage',
+              }
+            }
+          })
+        
+        }
+      })
+
+      Vue.component('newadmin', {
+        template: '#newadmin-template',
+        delimiters: ['${', '}'],
+        data: {
+          username: '',
+        },
+        methods: {
+
+          addnewadministrator() {
+            username = this.username
+            $.post('/addnewadmin/' + this.username)
+            .done(function() {
+              alert('Successfully sent ' + username + '@stolaf.edu an email for them to complete the process of account creation.')
+            })
+            .fail(function() {
+              alert('Failed to send ' + username + '@stolaf.edu an email for them to complete the process of account creation.')
+              
+            })
+          },
+
+        },
+      })
+
+      Vue.component('changepassword', {
+        template: '#changepassword-template',
+        delimiters: ['${', '}'],
+        data: {
+          oldpassword: '',
+          newpassword1: '',
+          newpassword2: '',
+        },
+        methods: {
+
+          submitpasswordchange() {
+            if (this.newpassword1 !== this.newpassword2) {
+              alert('Passwords do not match!')
+              $('.pass').css('border', '1px solid red')
+            } else {
+              $('.pass').css('border', '')
+              $.post('/changepassword/' + this.oldpassword + '/' + this.newpassword1)
+              .done(function() {
+                alert('Password sucessfully reset. Please log out and log back in again to use the new password')
+              })
+              .fail(function() {
+                alert('Password reset unsucessful.')
+              })
+            }
+          },
+
+        },
+      })
+
+      Vue.component('modal', {
+      template: '#modal-template',
+      data: {
+        newcapacity: [],
+        emails: [],
+        oldcapacity: [],
+        newemail: [],
+      },
+      delimiters: ['${', '}'],
+      methods: {
+
+        deleteapp() {
+          client = this.$parent.clients[this.$parent.editingindex]
+          deletionconfirmation = confirm('Please confirm action: Delete all endpoints and data for app "' + client.publiclink + '"')
+          if (deletionconfirmation) {
+            that = this
+            $.post('/deleteapp/' + client.publiclink, null)
+            .done(function() {
+              alert('Successfully deleted application ' + client.publiclink)
+              that.$parent.systemusage -= that.$parent.clients[that.$parent.editingindex].totalcapacity
+              that.$parent.clients.splice(that.$parent.editingindex, 1)
+              that.$emit('close')
+            })
+            .fail(function() {
+              alert('Failed to delete application ' + client.publiclink)
+            })
+          }
+          
+        },
+
+        reflectchanges() {
+          clientdifference = this.newcapacity - this.oldcapacity
+          newsystemusage = this.$parent.systemusage + clientdifference
+          $('#totalcapacity').html('Changing capacity from ' + this.oldcapacity + 'GB to ' + this.newcapacity + 'GB.<br />' + 'System usage will change from ' + this.$parent.systemusage + 'GB to ' + newsystemusage + 'GB/' + this.$parent.systemcapacity + 'GB.')
+        },
+
+        generateNewSecretLink() {
+          possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+          newlink = ""
+          index = this.$parent.editingindex
+          for (var i = 0; i < 40; i++)
+            newlink += possible.charAt(Math.floor(Math.random() * possible.length));
+          this.$parent.clients[index].secretlink = newlink
+          $.ajax(
+            {
+              url: "/newsecretlink/" + this.$parent.clients[index].publiclink + "/" + newlink,
+              type: "post"
+            }
+          )
+          .done(function() {
+            alert('Successfully updated secret link')
+          })
+          .fail(function() {
+            alert('Failed to update new secret link')
+          })
+        },
+
+        submitNewEmail() {
+
+          repeated = false
+          emails = this.$parent.emails
+          numberofemails = this.$parent.emails.length
+          email = this.newemail
+          for (counterindex = 0; counterindex < numberofemails; counterindex++) {
+            if (this.newemail === this.$parent.emails[counterindex]) {
+              repeated = true
+              alert('User already added to admin list of ' + this.$parent.clients[this.$parent.editingindex].publiclink)
+              break
+            }
+          }
+
+          if (repeated === false) {
+            this.$parent.emails.splice(this.$parent.emails.length, 0, this.newemail)
+            $.post('/addemail/' + this.$parent.clients[this.$parent.editingindex].publiclink + '/' + this.newemail, null)
+            this.newemail = ''
+          }
+
+        },
+
+        removeEmail(email, index) {
+          $.post('/rmemail/' + this.$parent.clients[this.$parent.editingindex].publiclink + '/' + email, null)
+          this.$parent.emails.splice(index, 1)
+        },
+
+        submitstoragechange() {
+          this.$parent.clients[this.$parent.editingindex].totalcapacity = this.newcapacity
+          difference = this.newcapacity - this.oldcapacity
+          this.$parent.systemusage += difference
+          $.post('/changecapacity/' + this.$parent.clients[this.$parent.editingindex].publiclink + '/' + this.newcapacity.toString(), null)
+          newsystemusage = this.$parent.systemcapacity - newsystemusage
+          $('#totalcapacity').html('Changed capacity to ' + this.newcapacity + 'GB.<br />' + 'BigDisk now has ' + newsystemusage + 'GB free.')
+          this.oldcapacity = this.newcapacity
+
+          $('#appusagechart').remove();
+          $('#appusagechartparent').append('<canvas id="appusagechart" width="400" height="400"><canvas>');
+          $('#systemusagechart').remove();
+          $('#systemusagechartparent').append('<canvas id="systemusagechart" width="400" height="400"><canvas>');
+
+          capacity = this.newcapacity;
+          used = this.$parent.clients[this.$parent.editingindex].using;
+          unused = capacity - used;
+          appctx = document.getElementById('appusagechart');
+          appusagechart = new Chart(appctx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [used, unused],
+                backgroundColor: [
+                  '#ff5879',
+                  '#2f98e8',
+                ]
+              }],
+              labels: [
+                'Actively Using',
+                'Unused',
+              ],
+            },
+            options: {
+              title: {
+                display: true,
+                text: 'App Current Resource Usage for ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+              }
+            }
+          })
+          systemtotalcapacity = this.$parent.systemcapacity
+          notbeingusedbyapp = systemtotalcapacity - capacity
+          systemctx = document.getElementById('systemusagechart');
+          systemusagechart = new Chart(systemctx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [capacity, notbeingusedbyapp],
+                backgroundColor: [
+                  '#ffc64c',
+                  '#42b8b8',
+                ]
+              }],
+              labels: [
+                'Being Used by ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+                'Not Being Used by ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+              ],
+            },
+            options: {
+              title: {
+                display: true,
+                text: this.$parent.clients[this.$parent.editingindex].publiclink + 'Total Resource Usage'
+              }
+            }
+          })
+
+
+        },
+      },
+      mounted() {
+          this.newcapacity =  this.$parent.clients[this.$parent.editingindex].totalcapacity
+          this.oldcapacity =  this.$parent.clients[this.$parent.editingindex].totalcapacity
+          usablesystemcapacity = this.$parent.systemcapacity - this.$parent.systemusage
+          $('#totalcapacity').html(this.newcapacity + 'GB allocated to <span style="color: blue;">' + this.$parent.clients[this.$parent.editingindex].publiclink +'</span>.<br />' + usablesystemcapacity + 'GB available on BigDisk.'  )
+          $('#modifytotalcapacity').val(this.newcapacity)
+
+          capacity = this.newcapacity;
+          used = this.$parent.clients[this.$parent.editingindex].using;
+          unused = capacity - used;
+          appctx = document.getElementById('appusagechart');
+          appusagechart = new Chart(appctx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [used, unused],
+                backgroundColor: [
+                  '#ff5879',
+                  '#2f98e8',
+                ]
+              }],
+              labels: [
+                'Actively Using',
+                'Unused',
+              ],
+            },
+            options: {
+              title: {
+                display: true,
+                text: 'App Current Resource Usage for ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+              }
+            }
+          })
+          systemtotalcapacity = this.$parent.systemcapacity
+          notbeingusedbyapp = systemtotalcapacity - capacity
+          systemctx = document.getElementById('systemusagechart');
+          systemusagechart = new Chart(systemctx, {
+            type: 'doughnut',
+            data: {
+              datasets: [{
+                data: [capacity, notbeingusedbyapp],
+                backgroundColor: [
+                  '#ffc64c',
+                  '#42b8b8',
+                ]
+              }],
+              labels: [
+                'Being Used by ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+                'Not Being Used by ' + this.$parent.clients[this.$parent.editingindex].publiclink,
+              ],
+            },
+            options: {
+              title: {
+                display: true,
+                text: this.$parent.clients[this.$parent.editingindex].publiclink + 'Total Resource Usage'
+              }
+            }
+          })
+
+      },
+    })
+
+
+
+    var vm = new Vue({
+      el: '#app',
+      delimiters: ['${', '}'],
+      data: {
+        clients: [],
+        emails: [],
+        ips: [],
+        systemcapacity: {{.SystemCapacity}},
+        systemusage: {{.SystemUsage}},
+        editingindex: [],
+        showmodal: false,
+        showchangepassword: false,
+        shownewadmin: false,
+        showsystemcapacity: false,
+        showmanageadmins: false,
+        showunbanips: false,
+        newapppubliclink: '',
+        newappsecretlink: '',
+        newapptotalcapacity: '',
+        admins: [],
+      },
+      methods: {
+
+        addnewapp() {
+
+          newclient = {
+            publiclink: this.newapppubliclink,
+            secretlink: this.newappsecretlink,
+            totalcapacity: this.newapptotalcapacity,
+            using: 0
+          }
+
+          re = new RegExp('^[a-z0-9_-]*$')
+
+          if (isNaN(this.newapptotalcapacity)) {
+            alert(this.newapptotalcapacity + ' is not a number to submit for total capacity')
+          } else if (this.newapppubliclink.match(re) === null) {
+            alert('Invalid public link (Needs to be URL safe, [lower-case alphanumerics, -, _ only]. Leave out [!, @, #, $, %, ^, &, *, (, ,), etc.])')
+          } else {
+            this.clients.push(newclient)
+            $.post('/addnewapp/' + this.newapppubliclink + '/' + this.newappsecretlink + '/' + newclient.totalcapacity)
+
+            this.systemusage = parseInt(this.systemusage, 10) + parseInt(this.newapptotalcapacity, 10)
+
+            this.newapppubliclink = ''
+            this.newappsecretlink = ''
+            this.newapptotalcapacity = ''
+            possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            newlink = ""
+            for (var i = 0; i < 40; i++)
+              newlink += possible.charAt(Math.floor(Math.random() * possible.length));
+            this.newappsecretlink = newlink
+          }
+
+        },
+
+
+        manageadminswindow() {
+          this.showmanageadmins = true
+          $.getJSON('/getadmins')
+          .done(function(data) {
+            if (data.admins !== null) {
+              that.admins = data
+            }
+          })
+        },
+
+
+        unbanipswindow() {
+          $.getJSON('/getbannedips')
+            .done(data => {
+                if (data !== null) {
+                  this.ips = data
+                  this.showunbanips = true
+                }
+            })
+        },
+
+        systemcapacitywindow() {
+          this.showsystemcapacity = true
+        },
+
+        changepasswordwindow() {
+          this.showchangepassword = true
+        },
+
+        addnewadminwindow() {
+          this.shownewadmin = true
+        },
+
+        editEntry(index) {
+          this.editingindex = index
+          $.getJSON('/emails/'+this.clients[index].publiclink)
+            .done(data => {
+              if (data['emails'] !== null) {
+                this.emails = data['emails']
+              }
+            })
+          this.showmodal = true
+        },
+
+        obscureLink(arg) {
+          return arg.substring(0, 5) + '...'
+        },
+      },
+      created() {
+        $.ajaxSetup({ cache: false });
+      },
+      mounted() {
+          possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+          newlink = ""
+          for (var i = 0; i < 40; i++)
+            newlink += possible.charAt(Math.floor(Math.random() * possible.length));
+          this.newappsecretlink = newlink
+          that = this
+          $.getJSON('/getclients')
+          .done(function(data) {
+            if (data.clients !== null) {
+              that.clients = data.clients
+            }
+          })
+
+      },
+    })

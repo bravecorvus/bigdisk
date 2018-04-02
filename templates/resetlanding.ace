@@ -1,0 +1,33 @@
+= doctype html
+html
+  head
+    link rel="stylesheet" type="text/css" href="/public/styles.css"
+    = css
+      #login-form div{
+        text-align: center;
+      }
+      #login-form input {
+        margin: .5em 1em;
+      }
+      #error {
+        text-align: center;
+        color: red;
+        margin-top: 1em;
+      }
+  body
+    h1 style="text-align: center;" BigDisk Admin Login Page
+    form#login-form action="/login"
+      div
+        label Username
+        input type="text" name="username" required=
+      div
+        label Password
+        input type="password" name="password" required=
+      div
+        input type="submit" value="Log In" name="login"
+
+  = javascript
+      $(document).ready( function() {
+        alert('Successfully reset password. Log in using your St. Olaf email and the password you just submitted.')
+      })
+
