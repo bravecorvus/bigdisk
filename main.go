@@ -6,6 +6,7 @@ import (
 	"github.com/gilgameshskytrooper/bigdisk/app"
 	"github.com/gilgameshskytrooper/bigdisk/utils"
 	"github.com/gorilla/mux"
+	"github.com/robfig/cron"
 	"github.com/urfave/negroni"
 )
 
@@ -19,6 +20,11 @@ func init() {
 
 func main() {
 	defer globals.DB.Close()
+
+	c := cron.New()
+	c.AddFunc("@midnight", func() { globals.RemoveOldRequests() })
+	c.Start()
+
 	r := mux.NewRouter()
 
 	// Admin Endpoints
