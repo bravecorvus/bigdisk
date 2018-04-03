@@ -160,10 +160,10 @@ Restart=on-abnormal
 User=root
 Group=root
 
-; Letsencrypt-issued certificates will be written to this directory.
+; Define API variables in order to use Caddy's auto-cert functionality
 Environment=NAMECHEAP_API_USER=
 Environment=NAMECHEAP_API_KEY=
-; Environment=CADDYPATH=/etc/ssl/caddy
+; Letsencrypt-issued certificates will be written to this directory.
 Environment=CADDYPATH=/home/[username]/.caddy
 
 ; Always set "-root" to something safe in case it gets forgotten in the Caddyfile.
