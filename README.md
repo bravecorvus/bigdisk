@@ -22,6 +22,35 @@ It uses [redis](https://redis.io/) for persistant storage while utilizing uses b
 **NOTE**
 > If you want to serve on a different port, just modify `service.bigdisk.ports*` in `docker-compose-actual.yaml` or `docker-compose.yaml` depending on development or production.
 
+### Using systemd to start the service automatically (in production)
+Define the file `/etc/systemd/system//bigdisk.service` as follows (replacing [path_to_bigdisk] with the full path to bigdisk):
+
+```
+[Unit]
+Description=BigDisk docker-compose container starter
+After=docker.service network-online.target
+Requires=docker.service network-online.target
+
+[Service]
+WorkingDirectory=/[path_to_bigdisk]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/usr/bin/docker-compose up -d
+
+ExecStop=/usr/local/bin/docker-compose down
+
+ExecReload=/usr/bin/docker-compose up -d
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then enable + start the systemd service.
+```
+sudo systemctl enable bigdisk && sudo systemctl start bigdisk
+```
+
 ## Underlying Storage
 BigDisk does not attempt to implement storage mounting (outside of making the `files` folder available to the application container through volume mount). Hence, if the machine running BigDisk Admin UI needs to mount a remote storage mount, it will be your job to use some type of remote mounting protocol (i.e. NFS, Samba, SSHFS) to mount said volume to the `files` folder before starting the application.
 
