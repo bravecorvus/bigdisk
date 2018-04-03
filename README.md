@@ -1,6 +1,6 @@
 # BigDisk Admin Control Panel
 > Andrew Lee
-<br />
+
 > 4/2/18
 
 ![img1](https://78.media.tumblr.com/09d8d890fea9166b4272867411ad81ec/tumblr_p6lpsmpO8Q1s5a4bko1_1280.png)
