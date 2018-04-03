@@ -144,7 +144,7 @@ caddy -conf /etc/caddy/Caddyfile
 
 If you need to run Caddy automatically every time your system reboots, you can create a systemd script (if you are on Ubuntu) as follows:
 
-Create the file `/etc/systemd/system/caddy.service`, and insert the following lines (replacing `username` with the your relevant Linux username):
+Create the file `/etc/systemd/system/caddy.service`, and insert the following lines (replacing `username` with the your relevant Linux username and adding the necessary environment variables for the Caddy TlS plugin if you are using Caddy to auto-renew certs):
 
 ```
 [Unit]
@@ -161,8 +161,8 @@ User=root
 Group=root
 
 ; Letsencrypt-issued certificates will be written to this directory.
-Environment=NAMECHEAP_API_USER=ajlee1000
-Environment=NAMECHEAP_API_KEY=48e19c850e62496bb77bb011a42755b3
+Environment=NAMECHEAP_API_USER=
+Environment=NAMECHEAP_API_KEY=
 ; Environment=CADDYPATH=/etc/ssl/caddy
 Environment=CADDYPATH=/home/[username]/.caddy
 
