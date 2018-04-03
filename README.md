@@ -26,7 +26,7 @@ It uses [redis](https://redis.io/) for persistant storage while utilizing uses b
 BigDisk does not attempt to implement storage mounting (outside of making the `files` folder available to the application container through volume mount). Hence, if the machine running BigDisk Admin UI needs to mount a remote storage mount, it will be your job to use some type of remote mounting protocol (i.e. NFS, Samba, SSHFS) to mount said volume to the `files` folder before starting the application.
 
 ## TLS Encryption
-This application automatically implement TLS. In order to fully secure the application, TLS is highly recommended. I will detail a method using [Caddy](https://caddyserver.com/) below.
+BigDisk does not automatically implement TLS. In order to fully secure the application, TLS is highly recommended. I will detail a method using [Caddy](https://caddyserver.com/) below.
 [Caddy](https://caddyserver.com/) is a wonderful web server brought to us by [mholt](https://github.com/mholt). It is written entirely in Go, and comes with some nifty features to get a fully encrypted website up and running in no time.
 
 Since Caddy uses Let's Encrypt by default, there are 2 necessary components to run the following configuration:
