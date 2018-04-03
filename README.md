@@ -167,7 +167,7 @@ Environment=NAMECHEAP_API_KEY=
 Environment=CADDYPATH=/home/[username]/.caddy
 
 ; Always set "-root" to something safe in case it gets forgotten in the Caddyfile.
-ExecStart=/usr/local/bin/caddy -log stdout -agree=true -conf=/etc/caddy/Caddyfile -root=/var/tmp
+ExecStart=/home/[username]/go/bin/caddy -log stdout -agree=true -conf=/etc/caddy/Caddyfile -root=/var/tmp
 ExecReload=/bin/kill -USR1 $MAINPID
 
 ; Use graceful shutdown with a reasonable timeout
