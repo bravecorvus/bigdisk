@@ -6,7 +6,7 @@
 ![img1](https://78.media.tumblr.com/09d8d890fea9166b4272867411ad81ec/tumblr_p6lpsmpO8Q1s5a4bko1_1280.png)
 ![img2](https://78.media.tumblr.com/a9f35b57d166415b01c11c41ac35db45/tumblr_p6lpryBZkd1s5a4bko1_1280.png)
 
-BigDisk Admin Control Panel is an application to easily provision static asset storage for large applications. Using the Admin Panel, admins can allocate a set amount of storage (in gibabytes), add administrators to the application and generate a secret token (used as part of the upload and delete endpoints only accessible by the app administrators).
+BigDisk Admin Control Panel is an application to easily provision static asset storage for large applications. Using the Admin Panel, admins can allocate a set amount of storage (in gigabytes), add administrators to the application and generate a secret token (used as part of the upload and delete endpoints only accessible by the app administrators).
 
 It uses [redis](https://redis.io/) for persistant storage while utilizing uses bcrypt to hash admin user passwords and using encrypted cookies to save application state. The panel also has an IP ban functionality which bans an IP after 5 failed attempts to log in.
 
@@ -203,7 +203,7 @@ ReadWriteDirectories=/etc/ssl/caddy
 WantedBy=multi-user.target
 ```
 
-To use the above systemd script, do `sudo systemctl enable caddy && systemctl start caddy`
+To use the above systemd script, do `sudo systemctl enable caddy && sudo systemctl start caddy`
 
 If you run into issues, start with [Caddy's awsome documentation](https://caddyserver.com/docs).
 
@@ -226,7 +226,7 @@ Scaling the UI + Database portions of the app should not be too difficult. Redis
 Just scaling the static asset hosting portion would be trivial (and can probably be accomplished by using a native webserver like Caddy/Nginx/Apache [except don't use apache [because it's slow](https://iwf1.com/wordpress/wp-content/uploads/2017/11/RAM-usage-over-time-across-7-stressing-tests-730x451.jpg)] mounting the root/files/ folder to BigDisk).
 
 ## Project Goals
-- [x] Use Efficient Psersistent Storage (Redis)
+- [x] Use Efficient Persistent Storage (Redis)
 - [x] Make sure passwords aren't stored in plaintext (Uses bcrypt to encrypt passwords)
 - [x] Finish Front-End (Heavily uses Vue.js)
 - [x] Connect all necessary endpoints
