@@ -23,7 +23,7 @@ It uses [redis](https://redis.io/) for persistant storage while utilizing uses b
 > If you want to serve on a different port, just modify `service.bigdisk.ports*` in `docker-compose-actual.yaml` or `docker-compose.yaml` depending on development or production.
 
 ### Using systemd to start the service automatically (in production)
-Define the file `/etc/systemd/system//bigdisk.service` as follows (replacing [path_to_bigdisk] with the full path to bigdisk):
+Define the file `/etc/systemd/system//bigdisk.service` as follows (replacing `[path_to_bigdisk]` with the full path to bigdisk):
 
 ```
 [Unit]
