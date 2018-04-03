@@ -1,6 +1,8 @@
 = doctype html
 html
   head
+    title BigDisk Admin Login
+    link rel="shortcut icon" href="/public/favicon.png" type="image/png"
     link rel="stylesheet" type="text/css" href="/public/styles.css"
     = css
       #login-form div{

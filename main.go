@@ -27,7 +27,12 @@ func main() {
 
 	r := mux.NewRouter()
 
+	// r.HandleFunc("/favicon.png", func(w http.ResponseWriter, r *http.Request) {
+	// http.ServeFile(w, r, utils.Pwd()+"favicon.png")
+	// }).Methods("GET")
+
 	// Admin Endpoints
+
 	r.HandleFunc("/", globals.Landing).Methods("GET")
 	r.HandleFunc("/newlanding", globals.NewLanding).Methods("GET")
 	r.HandleFunc("/resetlanding", globals.ResetLanding).Methods("GET")
