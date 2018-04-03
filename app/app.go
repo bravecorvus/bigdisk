@@ -33,7 +33,8 @@ type AddNewAdminStruct struct {
 }
 
 func (app *App) Initialize() {
-	db, err := redis.Dial("tcp", ":6379")
+	redisdblocation := os.Getenv("REDISLOCATION")
+	db, err := redis.Dial("tcp", redisdblocation)
 	app.DB = db
 	if err != nil {
 		log.Println(err.Error())
