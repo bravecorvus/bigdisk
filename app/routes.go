@@ -142,17 +142,17 @@ func (app *App) Home(w http.ResponseWriter, r *http.Request) {
 
 			template, err := ace.Load("templates/superadminhome", "", nil)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, "template, err := ace.Load(\"templates/superadminhome\", \"\", nil)", http.StatusInternalServerError)
 				return
 			}
 			homeelements, err := structs.NewHomeElements(app.DB)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, "homeelements, err := structs.NewHomeElements(app.DB)", http.StatusInternalServerError)
 				return
 			}
 
 			if err = template.Execute(w, homeelements); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, "if err = template.Execute(w, homeelements); err != nil {", http.StatusInternalServerError)
 				return
 			}
 
@@ -620,16 +620,10 @@ func (app *App) UnbanIP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type request struct {
-	Filename string `json:"filename"`
-}
-
 type response struct {
 	Status  bool
 	Message string
 }
-
-var results []string
 
 func (app *App) UploadFile(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -672,7 +666,7 @@ func (app *App) UploadFile(w http.ResponseWriter, r *http.Request) {
 	if _, err = os.Stat(utils.Pwd() + "files/" + publiclink + "/" + header.Filename); err == nil {
 
 		log.Println("Client attempted to upload and save file with same name as an existing file.")
-		json.NewEncoder(w).Encode(response{Status: false, Message: "The file you are trying to uploade contains the name of a file which already exists in the system. Make sure to name your files with unique names, or delete the file using the delete endpoint before attempting to upload the file"})
+		json.NewEncoder(w).Encode(response{Status: false, Message: "The file you are trying to upload contains the name of a file which already exists in the system. Make sure to name your files with unique names, or delete the file using the delete endpoint before attempting to upload the file"})
 		return
 
 	}

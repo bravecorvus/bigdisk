@@ -1,0 +1,27 @@
+version: '2'
+services:
+  db:
+    image: 'bitnami/redis:4.0'
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379'
+    volumes:
+      - ./data:/bitnami
+  bigdisk:
+    build: .
+    restart: always
+    links:
+      - db
+    environment:
+      - BIGDISKSUPERADMINEMAIL=
+      - BIGDISKURL=https://bigdisk.gilgameshskytrooper.io
+      - BIGDISKEMAILUSERNAME=
+      - BIGDISKEMAILPASSWORD=
+      - BIGDISKSUPERADMINPASSWORD=
+      - REDISLOCATION=
+    volumes:
+      - ./files:/files
+    ports:
+     - '8080:8080'

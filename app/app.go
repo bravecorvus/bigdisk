@@ -8,6 +8,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/gilgameshskytrooper/bigdisk/crypto"
 	"github.com/gilgameshskytrooper/bigdisk/email"
+	"github.com/gilgameshskytrooper/bigdisk/utils"
 	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,8 +34,7 @@ type AddNewAdminStruct struct {
 }
 
 func (app *App) Initialize() {
-	redisdblocation := os.Getenv("REDISLOCATION")
-	db, err := redis.Dial("tcp", redisdblocation)
+	db, err := redis.DialURL(os.Getenv("REDISLOCATION"))
 	app.DB = db
 	if err != nil {
 		log.Println(err.Error())
@@ -86,5 +86,10 @@ func (app *App) Initialize() {
 	app.URL = os.Getenv("BIGDISKURL")
 	if app.URL == "" {
 		app.URL = "http://localhost:8080"
+	}
+	using, _ := redis.String(app.DB.Do("HGET", "system", "using"))
+	if using == "" {
+		calculatedusing := utils.DirSize(utils.Pwd() + "files")
+		app.DB.Do("HSET", "system", "using", calculatedusing)
 	}
 }

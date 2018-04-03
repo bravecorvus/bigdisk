@@ -670,13 +670,13 @@ html lang=en
 
 
         manageadminswindow() {
-          this.showmanageadmins = true
           $.getJSON('/getadmins')
           .done(function(data) {
             if (data.admins !== null) {
               that.admins = data
             }
           })
+          this.showmanageadmins = true
         },
 
 
@@ -685,8 +685,8 @@ html lang=en
             .done(data => {
                 if (data !== null) {
                   this.ips = data
-                  this.showunbanips = true
                 }
+                this.showunbanips = true
             })
         },
 
