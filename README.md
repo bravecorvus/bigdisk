@@ -15,7 +15,7 @@ It uses [redis](https://redis.io/) for persistant storage while utilizing uses b
 2. `git clone https://github.com/gilgameshskytrooper/bigdisk.git`
 3. `cd bigdisk`
 4. `cp docker-compose.yaml docker-compose-actual.yaml`
-5. You will need to replace the environment variables for the service bigdisk on `docker-compose-actual.yaml`. `BIGDISKSUPERADMINEMAIL` should be an email you can access. `BIGDISKURL` will be the URL that will be defined in the `Caddyfile` (in my case, https://bigdisk.gilgameshskytrooper.io). Replace `BIGDISKEMAILUSERNAME` and `BIGDISKEMAILPASSWORD` with the login credential for a Gmail account with secure apps turned off (if you want to verify where this is used, look at `email/email.go`). `BIGDISKSUPERADMINPASSWORD` will be any password you would like to use for the `admin` superadmin account on the website.
+5. You will need to replace the environment variables for the service bigdisk on `docker-compose-actual.yaml`. `BIGDISKSUPERADMINEMAIL` should be an email you can access. `BIGDISKURL` will be the root URL of BigDisk (in my case, https://bigdisk.gilgameshskytrooper.io). Replace `BIGDISKEMAILUSERNAME` and `BIGDISKEMAILPASSWORD` with the login credential for a Gmail account with secure apps turned off (if you want to verify where this is used, look at `email/email.go`). `BIGDISKSUPERADMINPASSWORD` will be any password you would like to use for the `admin` superadmin account on the website.
 6. In development, use the `./build` command which will create the necessary folders, and launch move the files `docker-compose.yaml` to a backup file and renaming `docker-compose-actual.yaml` as `docker-compose.yaml` before running `docker-compose up` [not in detached mode so as to give you the ability to log the calls]. Press `CTR-c` to exit the `docker-compose` application. (The reason why this method is used to run in development is so that sensitive information can be written into `docker-compose-actual.yaml` which is not tracked by git and hence hides private information.)
 7. In production, remove the `docker-compose.yaml` and rename `docker-compose-actual.yaml` as `docker-compose.yaml`. Use the command `docker-compose up -d` to run the application in a headless state (which will allow you to exit the shell without stopping the containers). You will need to make sure the `data` and `files` folders exist in the same directory as `docker-compose.yaml` to ensure data persistence is preseved even if the containers are restarted (Or just make sure you run `./build` at least once as the script does all of that for you).
 
@@ -219,3 +219,18 @@ sudo ufw enable to any port 80, 443 proto tcp
 ```
 
 Once you have this set up, BigDisk will be a fairly secure web application.
+
+## Further Notes
+Scaling the UI + Database portions of the app should not be too difficult. Redis already comes with a master-slave replication high-availability architectures [Redis Sentinel](https://redis.io/topics/sentinel). In BigDisk's backend, admin browser cookie's are encrypted using a pair of integers which are randomly generated when the app is first started. As long as this integer is synced accross all instances of the running app (as well as all apps are accessing the same Redis cluster), this application will be able to scale. However, since the backend is written in Golang (statically compiled, almost as fast as C++), and Redis (all READS and WRITES are done in-memory, and persistent storage is updated periodically), this should not be an issue (if never, for a very long time).
+
+Just scaling the static asset hosting portion would be trivial (and can probably be accomplished by using a native webserver like Caddy/Nginx/Apache [except don't use apache [because it's slow](https://iwf1.com/wordpress/wp-content/uploads/2017/11/RAM-usage-over-time-across-7-stressing-tests-730x451.jpg)] mounting the root/files/ folder to BigDisk).
+
+## Project Goals
+- [x] Use Efficient Psersistent Storage (Redis)
+- [x] Make sure passwords aren't stored in plaintext (Uses bcrypt to encrypt passwords)
+- [x] Finish Front-End (Heavily uses Vue.js)
+- [x] Connect all necessary endpoints
+- [x] Minimize application dependencies by Dockerizing application, and writing a `docker-compose.yaml` file for easy deployment
+- [ ] Add Redis Password (Not entirely necessary as the only entity which is able to even access Redis' endpoint is the BigDisk container [due to the way I defined the Redis container definition in `docker-compose.yaml`]), too much security would not be a bad thing.
+- [ ] Look into auto-scaling features (especially for hosting files). Although you can infinitely multiply the number of static asset proxies that mount BigDisk, you will hit the bottleneck of BigDisks ability to handle requests.
+- [ ] Add better code documentation (for future developers)
