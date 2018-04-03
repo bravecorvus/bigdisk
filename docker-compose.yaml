@@ -16,11 +16,11 @@ services:
       - db
     environment:
       - BIGDISKSUPERADMINEMAIL=
-      - BIGDISKURL=https://bigdisk.gilgameshskytrooper.io
+      - BIGDISKURL=
       - BIGDISKEMAILUSERNAME=
       - BIGDISKEMAILPASSWORD=
       - BIGDISKSUPERADMINPASSWORD=
-      - REDISLOCATION=
+      - REDISLOCATION=redis://db:6379
     volumes:
       - ./files:/files
     ports:

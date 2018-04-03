@@ -1,6 +1,8 @@
 #!/bin/bash
 mkdir data
 chmod -R 777 data
+mkdir files
+chmod -R 777 files
 mv docker-compose.yaml docker-compose-original.yaml
 mv docker-compose-actual.yaml docker-compose.yaml
 docker-compose up
