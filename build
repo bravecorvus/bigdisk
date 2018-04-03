@@ -3,3 +3,6 @@ mkdir data
 chmod -R 777 data
 mv docker-compose.yaml docker-compose-original.yaml
 mv docker-compose-actual.yaml docker-compose.yaml
+docker-compose up
+mv docker-compose.yaml docker-compose-actual.yaml
+mv docker-compose-original.yaml docker-compose.yaml
