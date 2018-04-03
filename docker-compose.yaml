@@ -1,7 +1,7 @@
 version: '2'
 services:
   db:
-    image: 'bitnami/redis:4.0'
+    image: 'bitnami/redis:latest'
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes

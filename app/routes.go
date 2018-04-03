@@ -650,14 +650,19 @@ func (app *App) UploadFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response{Status: false, Message: "Database Error"})
 		return
 	}
-	availableBytes := int64((totalcapacity - using) * 1073741824)
-	log.Println("availableBytes", availableBytes)
 
-	r.Body = http.MaxBytesReader(w, r.Body, availableBytes)
+	availableBytes := int64((totalcapacity - using) * 1000000000)
+
+	if availableBytes-r.ContentLength < 0 {
+		log.Println("Client tried up upload file larger than available space")
+		json.NewEncoder(w).Encode(response{Status: false, Message: "You tried to upload a file larger than your allocated space"})
+		return
+	}
+
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		log.Println("Client", publiclink, "attempted to upload a file that is over the allotted disk quota by the app.")
-		json.NewEncoder(w).Encode(response{Status: false, Message: "You attempted to upload a file that is over the allotted disk quota by the app. If you need more space, please contact a BigDisk Admin"})
+		log.Println("Client", publiclink, "Error uploading file", err.Error())
+		json.NewEncoder(w).Encode(response{Status: false, Message: "Error uploading file " + err.Error()})
 		return
 	}
 
@@ -683,8 +688,8 @@ func (app *App) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fi, _ := out.Stat()
-	newusing := using*1073741824 + float64(fi.Size())
-	_, err = app.DB.Do("HSET", "clients", publiclink+":using", newusing/1073741824)
+	newusing := using*1000000000 + float64(fi.Size())
+	_, err = app.DB.Do("HSET", "clients", publiclink+":using", newusing/1000000000)
 	json.NewEncoder(w).Encode(response{Status: true, Message: "File uploaded successfully"})
 }
 
@@ -709,6 +714,8 @@ func (app *App) DeleteFile(w http.ResponseWriter, r *http.Request) {
 	file, err := os.Open(utils.Pwd() + "files/" + publiclink + "/" + filename)
 	if err != nil {
 		log.Println(err.Error())
+		json.NewEncoder(w).Encode(response{Status: false, Message: "File does not exist on server"})
+		return
 	}
 	fi, _ := file.Stat()
 	using, err := redis.Float64(app.DB.Do("HGET", "clients", publiclink+":using"))
@@ -717,9 +724,9 @@ func (app *App) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response{Status: false, Message: "Database Error"})
 		return
 	}
-	newusing := (using * 1073741824) - float64(fi.Size())
+	newusing := (using * 1000000000) - float64(fi.Size())
 	file.Close()
-	_, err = app.DB.Do("HSET", "clients", publiclink+":using", newusing/1073741824)
+	_, err = app.DB.Do("HSET", "clients", publiclink+":using", newusing/1000000000)
 	if err != nil {
 		log.Println("Database Error")
 		json.NewEncoder(w).Encode(response{Status: false, Message: "Database Error"})
