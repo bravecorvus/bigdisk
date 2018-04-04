@@ -3,7 +3,7 @@ html lang=en
   head
     title BigDisk SuperAdmin Home
     link rel="shortcut icon" href="/public/favicon.png" type="image/png"
-    script src="https://unpkg.com/vue@2.1.10/dist/vue.js"
+    script src="https://unpkg.com/vue@2.1.10/dist/vue.min.js"
     script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"
     script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
     link rel="stylesheet" type="text/css" href="/public/styles.css"
@@ -131,7 +131,7 @@ html lang=en
                   #systemusagechartparent style="width: 48%; float: right;"
                     canvas#systemusagechart width="400" height="400"
                   div class="slidecontainer" style="text-align: center;"
-                    input#modifytotalcapacity type="range" min="1" :max="this.$parent.systemcapacity" v-model="newcapacity" class="slider" @mouseup="reflectchanges" @keyup="reflectchanges"
+                    input#modifytotalcapacity type="range" :min="this.$parent.clients[this.$parent.editingindex].using" :max="this.$parent.systemcapacity" v-model="newcapacity" class="slider" @mouseup="reflectchanges" @keyup="reflectchanges"
                     p#totalcapacity
                     button style="background-color: #4CAF50; color: white;" @click="submitstoragechange" Submit Changes
                     br
