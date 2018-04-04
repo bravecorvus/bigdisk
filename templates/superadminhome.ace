@@ -3,7 +3,7 @@ html lang=en
   head
     title BigDisk SuperAdmin Home
     link rel="shortcut icon" href="/public/favicon.png" type="image/png"
-    script src="https://unpkg.com/vue@2.1.10/dist/vue.min.js"
+    script src="https://unpkg.com/vue@2.1.10/dist/vue.js"
     script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"
     script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"
     link rel="stylesheet" type="text/css" href="/public/styles.css"
