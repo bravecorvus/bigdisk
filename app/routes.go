@@ -653,16 +653,12 @@ func (app *App) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	availableBytes := int64((totalcapacity - using) * 1000000000)
 
-	if availableBytes-r.ContentLength < 0 {
-		log.Println("Client tried up upload file larger than available space")
-		json.NewEncoder(w).Encode(response{Status: false, Message: "You tried to upload a file larger than your allocated space"})
-		return
-	}
+	r.Body = http.MaxBytesReader(w, r.Body, availableBytes)
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		log.Println("Client", publiclink, "Error uploading file", err.Error())
-		json.NewEncoder(w).Encode(response{Status: false, Message: "Error uploading file " + err.Error()})
+		log.Println("Client tried up upload file larger than available space")
+		json.NewEncoder(w).Encode(response{Status: false, Message: "You tried to upload a file larger than your allocated space"})
 		return
 	}
 
