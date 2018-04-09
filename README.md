@@ -256,7 +256,7 @@ Just scaling the static asset hosting portion would be trivial (and can probably
 
 
 ## Integrating BigDisk API Within Apps
-Since this tool is formost a way for Cluster Mangers to allocate a pre-determined amount of space (made available via the secure endpoint), the clients will be St. Olaf developers (i.e. HiPerCiC Web Apps/MCA) the following are some implementation details regarding BigDisk API.
+Since the primary clients for BigDisk API will be St. Olaf developers (i.e. HiPerCiC Web Apps/MCA) the following are some implementation details regarding BigDisk API, I compiled a few pointers on how to integrate BigDisk API file uploading into an application.
 
 In Django, React, or Java, the naive approach to allow file uploads to BigDisk would be to first download the entire file (either in memory, or to disk), and then upload the file to the BigDisk secure endpoint after this completes. However, this method is inherently inefficient (as there are two separate file transfers for every 1 upload operation by the user). Instead, I suggest going about it via reverse proxy. The idea is that you extract the valid information and save it to app's DB (i.e. which user uploaded the content, the permanent link to the resource, date uploaded etc.) Then, you forward that request via reverse proxy to the secure endpoint.
 
@@ -264,6 +264,8 @@ This method yields numerous benefits:
 1. You won't have to hardcode the secure endpoint in the client side code (i.e. JavaScript).
 2. You get close to the speed of a direct upload (instead of having to wait for the file upload on the app side to complete before beginning the file transfer to BigDisk).
 3. Due to #2, your app will be able to give the client quick feedback.
+
+Reverse proxying is just the ability to chain a request to another server (which is diffferent from a redirect which exposes the URL to the client). This is a fairly common task, which is implemented either through native libraries or 3rd party libraries in Java, Node, and Python. For example, the [django-revproxy](https://github.com/TracyWebTech/django-revproxy) in Django will allow you to define a upstream URL in your code (which will be your secure endpoint). For more specific implementation of a reverse proxy, Google around.
 
 ## Project Goals
 - [x] Use Efficient Persistent Storage (Redis)
