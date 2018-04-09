@@ -267,6 +267,8 @@ This method yields numerous benefits:
 
 Reverse proxying is just the ability to chain a request to another server (which is diffferent from a redirect which exposes the URL to the client). This is a fairly common task, which is implemented either through native libraries or 3rd party libraries in Java, Node, and Python. For example, the [django-revproxy](https://github.com/TracyWebTech/django-revproxy) in Django will allow you to define a upstream URL in your code (which will be your secure endpoint). For more specific implementation of a reverse proxy, Google around.
 
+**Note: it will be your job as the app developers to ensure that filenames are sanitized before uploading the file to BigDisk (e.g. make sure filenames are unique, have no spaces, and contain no URL query delimiting characters like ! @ # $ % etc.).**
+
 ## Project Goals
 - [x] Use Efficient Persistent Storage (Redis)
 - [x] Make sure passwords aren't stored in plaintext (Uses bcrypt to encrypt passwords)
