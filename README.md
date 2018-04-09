@@ -254,6 +254,17 @@ Scaling the UI + Database portions of the app should not be too difficult. Redis
 
 Just scaling the static asset hosting portion would be trivial (and can probably be accomplished by using a native webserver like Caddy/Nginx/Apache [except don't use apache [because it's slow](https://iwf1.com/wordpress/wp-content/uploads/2017/11/RAM-usage-over-time-across-7-stressing-tests-730x451.jpg)] mounting the root/files/ folder to BigDisk).
 
+
+## Integrating BigDisk API Within Apps
+Since this tool is formost a way for Cluster Mangers to allocate a pre-determined amount of space (made available via the secure endpoint), the clients will be St. Olaf developers (i.e. HiPerCiC Web Apps/MCA) the following are some implementation details regarding BigDisk API.
+
+In Django, React, or Java, the naive approach to allow file uploads to BigDisk would be to first download the entire file (either in memory, or to disk), and then upload the file to the BigDisk secure endpoint after this completes. However, this method is inherently inefficient (as there are two separate file transfers for every 1 upload operation by the user). Instead, I suggest going about it via reverse proxy. The idea is that you extract the valid information and save it to app's DB (i.e. which user uploaded the content, the permanent link to the resource, date uploaded etc.) Then, you forward that request via reverse proxy to the secure endpoint.
+
+This method yields numerous benefits:
+1. You won't have to hardcode the secure endpoint in the client side code (i.e. JavaScript).
+2. You get close to the speed of a direct upload (instead of having to wait for the file upload on the app side to complete before beginning the file transfer to BigDisk).
+3. Due to #2, your app will be able to give the client quick feedback.
+
 ## Project Goals
 - [x] Use Efficient Persistent Storage (Redis)
 - [x] Make sure passwords aren't stored in plaintext (Uses bcrypt to encrypt passwords)
