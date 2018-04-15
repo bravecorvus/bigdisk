@@ -155,7 +155,7 @@ html lang=en
             td ${newappsecretlink}
             td 0GB
             td
-              input type="text" v-model="newapptotalcapacity"
+              input type="text" v-model="newapptotalcapacity" GB
             td
               button style="background-color: #4CAF50; color: white;" @click="addnewapp" Add New Application
                 
@@ -551,6 +551,8 @@ html lang=en
             alert(this.newapptotalcapacity + ' is not a number to submit for total capacity')
           } else if (this.newapppubliclink.match(re) === null) {
             alert('Invalid public link (Needs to be URL safe, [lower-case alphanumerics, -, _ only]. Leave out [!, @, #, $, %, ^, &, *, (, ,), etc.])')
+          } else if (this.systemcapacity - this.newapptotalcapacity - systemusage < 0) {
+            alert('Cannot allocate more space than available system space')
           } else {
             this.clients.push(newclient)
             $.post('/addnewapp/' + this.newapppubliclink + '/' + this.newappsecretlink + '/' + newclient.totalcapacity)
