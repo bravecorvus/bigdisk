@@ -28,7 +28,7 @@ func (app *App) Landing(w http.ResponseWriter, r *http.Request) {
 
 		_, authenticated := app.authenticateCookie(r)
 		if authenticated {
-			renewCookie(w, r)
+			app.renewCookie(w, r)
 			http.Redirect(w, r, "/home", 302)
 			return
 		} else {
@@ -101,15 +101,15 @@ func (app *App) Login(w http.ResponseWriter, r *http.Request) {
 		target = "/home"
 	} else {
 
-		failed := getFailedLogins(r)
+		failed := app.getFailedLogins(r)
 
 		if failed == 100 {
-			initializeFailedLogins(w, r)
+			app.initializeFailedLogins(w, r)
 			http.Redirect(w, r, target, 302)
 			return
 		} else {
 			if failed >= 5 {
-				ip, iperr := getIPFromRequest(r)
+				ip, iperr := app.getIPFromRequest(r)
 				if iperr != nil {
 					log.Println("iperr", iperr.Error())
 				}
@@ -136,7 +136,7 @@ func (app *App) Home(w http.ResponseWriter, r *http.Request) {
 	if authenticated {
 
 		app.DB.Do("HSET", "logins", username+":lastlogin", time.Now().Format(time.UnixDate))
-		renewCookie(w, r)
+		app.renewCookie(w, r)
 
 		if username == "admin" {
 
@@ -194,7 +194,7 @@ func (app *App) NewSecretLink(w http.ResponseWriter, r *http.Request) {
 	secretlink := vars["secretlink"]
 	_, authenticated := app.authenticateCookie(r)
 	if authenticated {
-		renewCookie(w, r)
+		app.renewCookie(w, r)
 		_, err := app.DB.Do("HSET", "clients", publiclink+":secretlink", secretlink)
 		if err != nil {
 			w.WriteHeader(403)
@@ -274,7 +274,7 @@ func (app *App) AddEmail(w http.ResponseWriter, r *http.Request) {
 	username := vars["email"]
 	_, authenticated := app.authenticateCookie(r)
 	if authenticated {
-		renewCookie(w, r)
+		app.renewCookie(w, r)
 		_, _ = app.DB.Do("SADD", "emails:"+publiclink, username)
 		secretlink, err := redis.String(app.DB.Do("HGET", "clients", publiclink+":secretlink"))
 		if err != nil {
@@ -290,7 +290,7 @@ func (app *App) AddEmail(w http.ResponseWriter, r *http.Request) {
 func (app *App) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	username, authenticated := app.authenticateCookie(r)
 	if authenticated {
-		renewCookie(w, r)
+		app.renewCookie(w, r)
 		vars := mux.Vars(r)
 		oldpassword := vars["oldpassword"]
 		newpassword := vars["newpassword"]

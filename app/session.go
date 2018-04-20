@@ -11,29 +11,24 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gilgameshskytrooper/bigdisk/crypto"
-	"github.com/gorilla/securecookie"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var cookieHandler = securecookie.New(
-	securecookie.GenerateRandomKey(64),
-	securecookie.GenerateRandomKey(32))
-
-func getUserName(r *http.Request) (userName string) {
+func (app *App) getUserName(r *http.Request) (userName string) {
 	if cookie, err := r.Cookie("username"); err == nil {
 		cookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("username", cookie.Value, &cookieValue); err == nil {
+		if err = app.CookieHandler.Decode("username", cookie.Value, &cookieValue); err == nil {
 			userName = cookieValue["username"]
 		}
 	}
 	return userName
 }
 
-func initializeFailedLogins(w http.ResponseWriter, r *http.Request) {
+func (app *App) initializeFailedLogins(w http.ResponseWriter, r *http.Request) {
 	value := map[string]string{
 		"failedlogins": "1",
 	}
-	failedlogins, err := cookieHandler.Encode("failedlogins", value)
+	failedlogins, err := app.CookieHandler.Encode("failedlogins", value)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "failedlogins",
@@ -45,7 +40,7 @@ func initializeFailedLogins(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) checkIfIPBanned(r *http.Request) bool {
-	ip, err := getIPFromRequest(r)
+	ip, err := app.getIPFromRequest(r)
 	if err != nil {
 		log.Println("Can't get IP from request in function checkIfIPBanned")
 		return true
@@ -59,11 +54,11 @@ func (app *App) checkIfIPBanned(r *http.Request) bool {
 
 }
 
-func getFailedLogins(r *http.Request) int {
+func (app *App) getFailedLogins(r *http.Request) int {
 	fails := 100
 	if cookie, err := r.Cookie("failedlogins"); err == nil {
 		cookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("failedlogins", cookie.Value, &cookieValue); err == nil {
+		if err = app.CookieHandler.Decode("failedlogins", cookie.Value, &cookieValue); err == nil {
 			failsstring := cookieValue["failedlogins"]
 			fails, strconverr := strconv.Atoi(failsstring)
 			if strconverr != nil {
@@ -76,13 +71,13 @@ func getFailedLogins(r *http.Request) int {
 }
 
 func (app *App) incrementFailedLogin(w http.ResponseWriter, r *http.Request) {
-	fails := getFailedLogins(r) + 1
+	fails := app.getFailedLogins(r) + 1
 	failsstring := strconv.Itoa(fails)
 
 	value := map[string]string{
 		"failedlogins": failsstring,
 	}
-	failedlogins, err := cookieHandler.Encode("failedlogins", value)
+	failedlogins, err := app.CookieHandler.Encode("failedlogins", value)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "failedlogins",
@@ -99,7 +94,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 		"username": username,
 	}
 
-	name, err := cookieHandler.Encode("username", value1)
+	name, err := app.CookieHandler.Encode("username", value1)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "username",
@@ -114,7 +109,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 		"expiration": tomorrow.Format(time.RFC3339),
 	}
 
-	expiration, err := cookieHandler.Encode("expiration", value2)
+	expiration, err := app.CookieHandler.Encode("expiration", value2)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "expiration",
@@ -124,7 +119,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 		http.SetCookie(w, cookie)
 	}
 
-	ip, iperr := getIPFromRequest(r)
+	ip, iperr := app.getIPFromRequest(r)
 	if iperr != nil {
 		log.Println(iperr)
 	}
@@ -133,7 +128,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 		"ipaddr": ip,
 	}
 
-	ipaddr, err := cookieHandler.Encode("ipaddr", value3)
+	ipaddr, err := app.CookieHandler.Encode("ipaddr", value3)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "ipaddr",
@@ -153,7 +148,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 		"token": tokenval,
 	}
 
-	token, err := cookieHandler.Encode("token", value4)
+	token, err := app.CookieHandler.Encode("token", value4)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "token",
@@ -166,7 +161,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 	value5 := map[string]string{
 		"failedlogins": "0",
 	}
-	failedlogins, err := cookieHandler.Encode("failedlogins", value5)
+	failedlogins, err := app.CookieHandler.Encode("failedlogins", value5)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "failedlogins",
@@ -179,7 +174,7 @@ func (app *App) setSession(username string, w http.ResponseWriter, r *http.Reque
 }
 
 func (app *App) clearSession(w http.ResponseWriter, r *http.Request) {
-	username := getUserName(r)
+	username := app.getUserName(r)
 	usernamecookie := &http.Cookie{
 		Name:   "username",
 		Value:  "",
@@ -206,13 +201,13 @@ func (app *App) clearSession(w http.ResponseWriter, r *http.Request) {
 	_, _ = app.DB.Do("HDEL", "logins", username+":token")
 }
 
-func renewCookie(w http.ResponseWriter, r *http.Request) {
+func (app *App) renewCookie(w http.ResponseWriter, r *http.Request) {
 	tomorrow := time.Now().Add(24 * time.Hour)
 	value := map[string]string{
 		"expiration": tomorrow.Format(time.RFC3339),
 	}
 
-	expiration, err := cookieHandler.Encode("expiration", value)
+	expiration, err := app.CookieHandler.Encode("expiration", value)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:  "expiration",
@@ -224,7 +219,7 @@ func renewCookie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) authenticateLogin(username, password string, r *http.Request) bool {
-	ip, err := getIPFromRequest(r)
+	ip, err := app.getIPFromRequest(r)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -242,7 +237,7 @@ func (app *App) authenticateLogin(username, password string, r *http.Request) bo
 }
 
 func (app *App) authenticateCookie(r *http.Request) (string, bool) {
-	ip, err := getIPFromRequest(r)
+	ip, err := app.getIPFromRequest(r)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -256,7 +251,7 @@ func (app *App) authenticateCookie(r *http.Request) (string, bool) {
 	var expiration time.Time
 	if expirationcookie, err := r.Cookie("expiration"); err == nil {
 		expirationcookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("expiration", expirationcookie.Value, &expirationcookieValue); err == nil {
+		if err = app.CookieHandler.Decode("expiration", expirationcookie.Value, &expirationcookieValue); err == nil {
 			expirationstring = expirationcookieValue["expiration"]
 		}
 	} else {
@@ -273,20 +268,20 @@ func (app *App) authenticateCookie(r *http.Request) (string, bool) {
 	}
 
 	// Decode the username from client cookie store it in variable username
-	username := getUserName(r)
+	username := app.getUserName(r)
 
 	// Decode IP address and check against the associated IP address in the redis database to ensure that the IP is the same
 	ipfromcookie := ""
 	if ipcookie, err := r.Cookie("ipaddr"); err == nil {
 		ipcookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("ipaddr", ipcookie.Value, &ipcookieValue); err == nil {
+		if err = app.CookieHandler.Decode("ipaddr", ipcookie.Value, &ipcookieValue); err == nil {
 			ipfromcookie = ipcookieValue["ipaddr"]
 		}
 	} else {
 		return "", false
 	}
 
-	ipfromrequest, iperr := getIPFromRequest(r)
+	ipfromrequest, iperr := app.getIPFromRequest(r)
 	if iperr != nil {
 		log.Println(err.Error())
 		return "", false
@@ -296,7 +291,7 @@ func (app *App) authenticateCookie(r *http.Request) (string, bool) {
 	tokenfromcookie := ""
 	if tokencookie, err := r.Cookie("token"); err == nil {
 		tokencookieValue := make(map[string]string)
-		if err = cookieHandler.Decode("token", tokencookie.Value, &tokencookieValue); err == nil {
+		if err = app.CookieHandler.Decode("token", tokencookie.Value, &tokencookieValue); err == nil {
 			tokenfromcookie = tokencookieValue["token"]
 		}
 	} else {
@@ -321,7 +316,7 @@ func (app *App) authenticateCookie(r *http.Request) (string, bool) {
 
 }
 
-func getIPFromRequest(req *http.Request) (string, error) {
+func (app *App) getIPFromRequest(req *http.Request) (string, error) {
 	ip, _, err := net.SplitHostPort(req.RemoteAddr)
 	if err != nil {
 		return "", fmt.Errorf("userip: %q is not IP:port", req.RemoteAddr)
